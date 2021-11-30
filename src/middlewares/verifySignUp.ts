@@ -1,7 +1,7 @@
 import {User} from '../models/user';
-import { Request, Response } from "express";
+import { Request, Response, NextFunction} from "express";
 
-const checkDuplicateUsernameOrEmail = async (req: Request, res: Response) => {
+const checkDuplicateUsernameOrEmail = async (req: Request, res: Response, next: NextFunction) => {
     try {
       const user = await User.findOne({ username: req.body.username });
       if (user)
@@ -9,6 +9,7 @@ const checkDuplicateUsernameOrEmail = async (req: Request, res: Response) => {
       const email = await User.findOne({ email: req.body.email });
       if (email)
         return res.status(400).json({ message: "The email already exists" });
+      next();
     } catch (error) {
       res.status(500).json({ message: error });
     }
