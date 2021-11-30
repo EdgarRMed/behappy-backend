@@ -3,7 +3,8 @@ import mongoose, { Schema, model } from "mongoose";
 // An interface that describes the properties
 // that are required to create a new Post
 interface PostAttrs {
-    user: mongoose.Schema.Types.ObjectId;
+    userid: mongoose.Schema.Types.ObjectId;
+    username: string;
     date: Date;
     text: string;
     image: string;
@@ -12,8 +13,12 @@ interface PostAttrs {
 }
 
 const postSchema = new Schema<PostAttrs>({
-    user: {
+    userid: {
         type: mongoose.Schema.Types.ObjectId,
+        required: true,
+    },
+    username: {
+        type: String,
         required: true,
     },
     date:{
