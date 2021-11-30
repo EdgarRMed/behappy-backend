@@ -1,6 +1,7 @@
-import express, { Request, Response } from "express";
+import { Request, Response } from "express";
 import { Post } from "../models/post";
 import { User } from "../models/user";
+import mongoose, { Schema, model } from "mongoose";
 
 export const createPost = async (req: Request, res: Response) => {
   try {
@@ -24,10 +25,39 @@ export const createPost = async (req: Request, res: Response) => {
   }
 };
 
+export const createComment = async (req: Request, res: Response) => {
+  try {
+    const postId = req.params.postId;
+    const userId = req.params.userId;
+    const comment = req.body.comment;
+    await Post.findOneAndUpdate(
+      { _id: postId }, 
+      {$push: {
+        comments: { 
+          $each: [{
+            date: new Date(),
+            user: new mongoose.Types.ObjectId(userId),
+            text: comment
+          }]
+         }
+      }},
+      {new: true},
+      (err: any, doc: any) => {
+        if (err) {
+          console.log("Something wrong when updating data!");
+        }
+        console.log(doc);
+        return res.status(200).send(doc);
+      }
+      );
+
+  } catch (error) { }
+}
+
 export const getPosts = async (req: Request, res: Response) => {
   try {
     Post.find({}, (err, posts) => {
       res.status(200).send(posts);
     });
-  } catch (error) {}
+  } catch (error) { }
 };
