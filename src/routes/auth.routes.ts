@@ -13,11 +13,7 @@ router.use((req, res, next) => {
 });
 
 // Only admin user can add more users
-router.post(
-  "/signup",
-  checkDuplicateUsernameOrEmail,
-  authCtrl.signUp
-);
+router.post("/signup", checkDuplicateUsernameOrEmail, authCtrl.signUp);
 
 router.post("/signin", authCtrl.signIn);
 router.post("/signout", authCtrl.signOut);
