@@ -1,7 +1,7 @@
 import { Request, Response } from "express";
 import { Post } from "../models/post";
 import { User } from "../models/user";
-import mongoose, { Schema, model } from "mongoose";
+import mongoose from "mongoose";
 
 export const createPost = async (req: Request, res: Response) => {
   try {
@@ -41,23 +41,28 @@ export const createComment = async (req: Request, res: Response) => {
           }]
          }
       }},
-      {new: true},
-      (err: any, doc: any) => {
+      {upsert: true}
+      ).populate({path: 'comments.user'})
+      .exec(function(err, post){
         if (err) {
-          console.log("Something wrong when updating data!");
+          console.log(err);
+        } else {
+          console.log(post);
+          return res.status(200).send(post);
         }
-        console.log(doc);
-        return res.status(200).send(doc);
-      }
-      );
+      });
 
   } catch (error) { }
 }
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
-    Post.find({}, (err, posts) => {
-      res.status(200).send(posts);
+    Post.find({}).populate('comments.user').exec(function(err, posts){
+      if (err) {
+        console.log(err);
+      } else {
+        return res.status(200).send(posts);
+      }
     });
   } catch (error) { }
 };
