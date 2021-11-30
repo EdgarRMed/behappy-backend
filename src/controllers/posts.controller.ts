@@ -25,12 +25,27 @@ export const createPost = async (req: Request, res: Response) => {
   }
 };
 
+export const deletePost = async (req: Request, res: Response) => {
+  const postId = req.query.postId;
+  try {
+    Post.deleteOne({_id: postId}, (err: any, deletedPost: any)=>{
+      if (err){
+        console.error(err);
+        res.status(500);
+      } else {
+        res.status(200).send(deletedPost);
+      }
+    });
+  } catch (error) {}
+
+};
+
 export const createComment = async (req: Request, res: Response) => {
   try {
-    const postId = req.params.postId;
-    const userId = req.params.userId;
+    const postId = req.query.postId;
+    const userId = String(req.query.userId);
     const comment = req.body.comment;
-    await Post.findOneAndUpdate(
+    Post.findOneAndUpdate(
       { _id: postId }, 
       {$push: {
         comments: { 
@@ -41,7 +56,7 @@ export const createComment = async (req: Request, res: Response) => {
           }]
          }
       }},
-      {upsert: true}
+      {upsert: true, new: true},
       ).populate({path: 'comments.user'})
       .exec(function(err, post){
         if (err) {

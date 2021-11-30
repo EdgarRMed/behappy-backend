@@ -22,7 +22,7 @@ export const uploadFile = async (req, res) => {
 };
 
 export const getImage = (req, res) => {
-  const { filename } = req.params;
+  const { filename } = req.query;
   const dirname = path.resolve();
   const fullfilepath = path.join(dirname, "images/" + filename);
   return res.sendFile(fullfilepath);

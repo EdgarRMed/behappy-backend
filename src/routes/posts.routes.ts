@@ -22,8 +22,9 @@ router.use((req, res, next) => {
 });
 
 router.post("/createpost", postCtrl.createPost);
-router.post("/createcomment/:postId/:userId", postCtrl.createComment);
+router.delete("/deletepost", postCtrl.deletePost);
+router.post("/createcomment", postCtrl.createComment);
 router.post("/uploadimage/:id", upload.single("image"), uploadCtrl.uploadFile);
-router.get("/image/:filename", uploadCtrl.getImage);
+router.get("/image", uploadCtrl.getImage);
 router.get("/getposts", postCtrl.getPosts);
 export default router;
