@@ -15,7 +15,6 @@ export const createPost = async (req: Request, res: Response) => {
       username: user.username,
       date: date,
       text: text,
-      likes: 0,
     });
     console.log(newPost);
     const savedPost = await newPost.save();
@@ -75,45 +74,77 @@ export const createComment = async (req: Request, res: Response) => {
 
 export const likePost = async (req: Request, res: Response) => {
   const postId = req.query.postId;
-  const like = req.query.like;
+  const userId = req.query.userId;
+
   try {
-    if (JSON.parse(String(like))) {
-      Post.findOneAndUpdate(
-        { _id: postId },
-        { $inc: { likes: 1 } },
-        { upsert: true, new: true },
-        (err, postUpdated) => {
-          if (err) {
-            console.log(err);
-            res.status(500).send(err);
+    await Post.find(
+      {
+        $and: [
+          { _id: postId },
+          {
+            likes: {
+              $elemMatch: {
+                userId: userId,
+              },
+            },
+          },
+        ],
+      },
+      (err, post) => {
+        if (err) {
+          console.log(err);
+        } else {
+          if (Object.keys(post).length === 0) {
+            // like the post
+            Post.findOneAndUpdate(
+              { _id: postId },
+              {
+                $addToSet: {
+                  likes: {
+                    $each: [
+                      {
+                        userId: userId,
+                      },
+                    ],
+                  },
+                },
+              },
+              { upsert: true, new: true }
+            ).exec(function (err, postUpdated) {
+              if (err) {
+                res.status(500).send(err);
+              } else {
+                res.status(200).send("Liked");
+              }
+            });
           } else {
-            res.status(200).send(postUpdated);
+            // Dislike
+            Post.findOneAndUpdate(
+              { _id: postId },
+              {
+                $pull: { likes: { userId: userId } },
+              },
+              { safe: true, upsert: true },
+              function (err, postUpdated) {
+                if (err) {
+                  res.status(500).send(err);
+                } else {
+                  res.status(200).send("Disliked");
+                }
+              }
+            );
           }
         }
-      );
-    } else {
-      Post.findOneAndUpdate(
-        { _id: postId },
-        { $inc: { likes: -1 } },
-        { upsert: true, new: true },
-        (err, postUpdated) => {
-          if (err) {
-            console.log(err);
-            res.status(500).send(err);
-          } else {
-            res.status(200).send(postUpdated);
-          }
-        }
-      );
-    }
+      }
+    );
   } catch (error) {}
 };
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
     Post.find({})
-      .sort({ date: -1 })
       .populate("comments.user")
+      .populate("likes.userId")
       .exec(function (err, posts) {
         if (err) {
           console.log(err);
