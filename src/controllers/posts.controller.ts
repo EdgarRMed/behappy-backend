@@ -36,8 +36,7 @@ export const deletePost = async (req: Request, res: Response) => {
         res.status(200).send(deletedPost);
       }
     });
-  } catch (error) { }
-
+  } catch (error) {}
 };
 
 export const createComment = async (req: Request, res: Response) => {
@@ -50,16 +49,19 @@ export const createComment = async (req: Request, res: Response) => {
       {
         $push: {
           comments: {
-            $each: [{
-              date: new Date(),
-              user: new mongoose.Types.ObjectId(userId),
-              text: comment
-            }]
-          }
-        }
+            $each: [
+              {
+                date: new Date(),
+                user: new mongoose.Types.ObjectId(userId),
+                text: comment,
+              },
+            ],
+          },
+        },
       },
-      { upsert: true, new: true },
-    ).populate({ path: 'comments.user' })
+      { upsert: true, new: true }
+    )
+      .populate({ path: "comments.user" })
       .exec(function (err, post) {
         if (err) {
           console.log(err);
@@ -68,9 +70,8 @@ export const createComment = async (req: Request, res: Response) => {
           return res.status(200).send(post);
         }
       });
-
-  } catch (error) { }
-}
+  } catch (error) {}
+};
 
 export const likePost = async (req: Request, res: Response) => {
   const postId = req.query.postId;
@@ -79,7 +80,7 @@ export const likePost = async (req: Request, res: Response) => {
     if (JSON.parse(String(like))) {
       Post.findOneAndUpdate(
         { _id: postId },
-        { $inc: {likes: 1}},
+        { $inc: { likes: 1 } },
         { upsert: true, new: true },
         (err, postUpdated) => {
           if (err) {
@@ -88,11 +89,12 @@ export const likePost = async (req: Request, res: Response) => {
           } else {
             res.status(200).send(postUpdated);
           }
-        });
+        }
+      );
     } else {
       Post.findOneAndUpdate(
         { _id: postId },
-        { $inc: {likes: -1}},
+        { $inc: { likes: -1 } },
         { upsert: true, new: true },
         (err, postUpdated) => {
           if (err) {
@@ -101,21 +103,23 @@ export const likePost = async (req: Request, res: Response) => {
           } else {
             res.status(200).send(postUpdated);
           }
-        });
+        }
+      );
     }
-  } catch (error) {
-
-  }
-}
+  } catch (error) {}
+};
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
-    Post.find({}).populate('comments.user').exec(function (err, posts) {
-      if (err) {
-        console.log(err);
-      } else {
-        return res.status(200).send(posts);
-      }
-    });
-  } catch (error) { }
+    Post.find({})
+      .sort({ date: -1 })
+      .populate("comments.user")
+      .exec(function (err, posts) {
+        if (err) {
+          console.log(err);
+        } else {
+          return res.status(200).send(posts);
+        }
+      });
+  } catch (error) {}
 };
