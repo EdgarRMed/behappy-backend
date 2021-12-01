@@ -24,7 +24,7 @@ router.use((req, res, next) => {
 router.post("/createpost", postCtrl.createPost);
 router.delete("/deletepost", postCtrl.deletePost);
 router.get("/getposts", postCtrl.getPosts);
-router.get("/likepost", postCtrl.likePost);
+router.post("/likepost", postCtrl.likePost);
 
 router.post("/createcomment", postCtrl.createComment);
 

@@ -15,7 +15,6 @@ export const createPost = async (req: Request, res: Response) => {
       username: user.username,
       date: date,
       text: text,
-      likes: 0,
     });
     console.log(newPost);
     const savedPost = await newPost.save();
@@ -36,8 +35,7 @@ export const deletePost = async (req: Request, res: Response) => {
         res.status(200).send(deletedPost);
       }
     });
-  } catch (error) { }
-
+  } catch (error) {}
 };
 
 export const createComment = async (req: Request, res: Response) => {
@@ -50,16 +48,19 @@ export const createComment = async (req: Request, res: Response) => {
       {
         $push: {
           comments: {
-            $each: [{
-              date: new Date(),
-              user: new mongoose.Types.ObjectId(userId),
-              text: comment
-            }]
-          }
-        }
+            $each: [
+              {
+                date: new Date(),
+                user: new mongoose.Types.ObjectId(userId),
+                text: comment,
+              },
+            ],
+          },
+        },
       },
-      { upsert: true, new: true },
-    ).populate({ path: 'comments.user' })
+      { upsert: true, new: true }
+    )
+      .populate({ path: "comments.user" })
       .exec(function (err, post) {
         if (err) {
           console.log(err);
@@ -68,54 +69,88 @@ export const createComment = async (req: Request, res: Response) => {
           return res.status(200).send(post);
         }
       });
-
-  } catch (error) { }
-}
+  } catch (error) {}
+};
 
 export const likePost = async (req: Request, res: Response) => {
   const postId = req.query.postId;
-  const like = req.query.like;
+  const userId = req.query.userId;
+   
   try {
-    if (JSON.parse(String(like))) {
-      Post.findOneAndUpdate(
-        { _id: postId },
-        { $inc: {likes: 1}},
-        { upsert: true, new: true },
-        (err, postUpdated) => {
-          if (err) {
-            console.log(err);
-            res.status(500).send(err);
+    await Post.find(
+      {
+        $and: [
+          { _id: postId },
+          {
+            likes: {
+              $elemMatch: {
+                userId: userId,
+              },
+            },
+          },
+        ],
+      },
+      (err, post) => {
+        if (err) {
+          console.log(err);
+        } else {
+          if (Object.keys(post).length === 0) {
+            // like the post
+            Post.findOneAndUpdate(
+              { _id: postId },
+              {
+                $addToSet: {
+                  likes: {
+                    $each: [
+                      {
+                        userId: userId,
+                      },
+                    ],
+                  },
+                },
+              },
+              { upsert: true, new: true }
+            ).exec(function (err, postUpdated) {
+              if (err) {
+                res.status(500).send(err);
+              } else {
+                res.status(200).send("Liked");
+              }
+            });
           } else {
-            res.status(200).send(postUpdated);
+            // Dislike
+            Post.findOneAndUpdate(
+              { _id: postId },
+              {
+                $pull: { likes: { userId: userId } },
+              },
+              { safe: true, upsert: true },
+              function (err, postUpdated) {
+                if (err) {
+                  res.status(500).send(err);
+                } else {
+                  res.status(200).send("Disliked");
+                }
+              }
+            );
           }
-        });
-    } else {
-      Post.findOneAndUpdate(
-        { _id: postId },
-        { $inc: {likes: -1}},
-        { upsert: true, new: true },
-        (err, postUpdated) => {
-          if (err) {
-            console.log(err);
-            res.status(500).send(err);
-          } else {
-            res.status(200).send(postUpdated);
-          }
-        });
-    }
-  } catch (error) {
-
-  }
-}
+        }
+      }
+    );
+  } catch (error) {}
+};
 
 export const getPosts = async (req: Request, res: Response) => {
   try {
-    Post.find({}).populate('comments.user').exec(function (err, posts) {
-      if (err) {
-        console.log(err);
-      } else {
-        return res.status(200).send(posts);
-      }
-    });
-  } catch (error) { }
+    Post.find({})
+      .populate("comments.user")
+      .populate("likes.userId")
+      .exec(function (err, posts) {
+        if (err) {
+          console.log(err);
+        } else {
+          return res.status(200).send(posts);
+        }
+      });
+  } catch (error) {}
 };

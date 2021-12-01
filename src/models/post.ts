@@ -9,7 +9,7 @@ interface PostAttrs {
   text: string;
   image: string;
   comments: Array<any>;
-  likes?: number;
+  likes?: Array<any>;
 }
 
 const postSchema = new Schema<PostAttrs>({
@@ -53,10 +53,16 @@ const postSchema = new Schema<PostAttrs>({
     },
   ],
 
-  likes: {
-    type: Number,
-    required: true,
-  },
+  likes: [
+    {
+      required: false,
+      userId: {
+        type: Schema.Types.ObjectId,
+        ref: 'User',
+        required: true,
+      },
+    }
+  ],
 });
 
 const Post = model<PostAttrs>("Post", postSchema);
