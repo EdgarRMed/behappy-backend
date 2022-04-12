@@ -1,5 +1,5 @@
-import express from "express";
 import cors from "cors";
+import express from "express";
 import morgan from "morgan";
 import helmet from "helmet";
 import authRoutes from "./routes/auth.routes";
@@ -10,6 +10,9 @@ const app = express();
 // Settings
 app.set("port", process.env.PORT || 4000);
 app.set("json spaces", 4);
+
+// Use cors with origin localhost:3000
+// app.use(cors({ origin: "http://localhost:3000" }));
 
 // CORS
 app.use((req, res, next) => {
