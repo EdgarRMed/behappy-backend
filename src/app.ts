@@ -12,19 +12,7 @@ app.set("port", process.env.PORT || 4000);
 app.set("json spaces", 4);
 
 // Use cors with origin localhost:3000
-// app.use(cors({ origin: "http://localhost:3000" }));
-
-// CORS
-app.use((req, res, next) => {
-  res.header("Access-Control-Allow-Origin", "*");
-  res.header(
-    "Access-Control-Allow-Headers",
-    "Authorization, X-API-KEY, Origin, X-Requested-With, Content-Type, Accept, Access-Control-Allow-Request-Method"
-  );
-  res.header("Access-Control-Allow-Methods", "GET, POST, OPTIONS, PUT, DELETE");
-  res.header("Allow", "GET, POST, OPTIONS, PUT, DELETE");
-  next();
-});
+app.use(cors({ origin: "http://localhost:3000", credentials: true }));
 
 app.use(helmet());
 app.use(morgan("dev"));
